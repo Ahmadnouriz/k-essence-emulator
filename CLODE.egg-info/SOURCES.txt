@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+CLODE/__init__.py
+CLODE/evalModel.py
+CLODE/evalModel_corr.py
+CLODE.egg-info/PKG-INFO
+CLODE.egg-info/SOURCES.txt
+CLODE.egg-info/dependency_links.txt
+CLODE.egg-info/top_level.txt

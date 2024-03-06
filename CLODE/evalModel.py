@@ -1,5 +1,6 @@
 # module1.py
 import numpy as np
+import warnings
 from scipy.interpolate import interp1d
 from scipy.special import eval_legendre
 import scipy.io as sio
@@ -8,7 +9,7 @@ import os
 
 
 
-path =  '../CLODE/muNCC/'
+path =  '/home/ahmad/CLODE/CLODE/muNCC/'
 
 PCNum = sio.loadmat(path +'PCNum.mat')['PCNum']
 PCNum = PCNum[0][0]
@@ -82,17 +83,17 @@ def get_mu(x, z, kk=None):
     if kk is None:
         kk = kk_tr
     else:
-        # Check kk values against kk_tr bounds
+        # Check kk values against kk_tr bounds and warn if necessary
         if any(k < min(kk_tr) for k in kk):
-            warnings.warn("The CLODE emulator is designed to emulate the mu function for wavenumbers within the range [0.016 h/Mpc to 9.4 h/Mpc]."
+            warnings.warn("The CLODE emulator is designed to emulate the mu function for wavenumbers within the range [0.016 h/Mpc to 9.4 h/Mpc]. "
                           "The wavenumbers you have requested include values lower than the minimum threshold of 0.016 h/Mpc. "
-                          "The values for wavenumbers lower than 0.016 h/Mpc are extrapolated and may not accurately reflect the modeled dynamics."
-                          , Warning)
+                          "These values will be clipped to the minimum threshold.", Warning)
         if any(k > max(kk_tr) for k in kk):
-            warnings.warn("The CLODE emulator is designed to emulate the mu function for wavenumbers within the range [0.016 h/Mpc to 9.4 h/Mpc]."
-                          "The wavenumbers you have requested include values lower than the minimum threshold of 0.016 h/Mpc. "
-                          "The values for wavenumbers higher than 9.4 h/Mpc are extrapolated and may not accurately reflect the modeled dynamics."
-                          , Warning)
+            warnings.warn("The CLODE emulator is designed to emulate the mu function for wavenumbers within the range [0.016 h/Mpc to 9.4 h/Mpc]. "
+                          "The wavenumbers you have requested include values higher than the maximum threshold of 9.4 h/Mpc. "
+                          "These values will be clipped to the maximum threshold.", Warning)
+        # Clip kk values to ensure they are within the bounds of kk_tr
+        #kk = np.clip(kk, np.min(kk_tr), np.max(kk_tr))
 
     # Convert x dictionary into an array, removing the third element
     x_array = list(x.values())
@@ -115,15 +116,14 @@ def get_mu(x, z, kk=None):
     reshape_emulated = np.reshape(Emulated, (len(redshifts), len(kk_tr)))
 
     def calculate_for_single_z(z_val):
-        # Find the closest match or interpolate for the given z value
         if z_val in redshifts:
             outcome_at_z = reshape_emulated[redshifts.index(z_val), :]
         else:
             f = interp1d(redshifts, reshape_emulated, axis=0, kind='linear')
             outcome_at_z = f(z_val)
 
-        # Interpolate outcomes based on kk
-        f_kk = interp1d(kk_tr, outcome_at_z, kind="cubic", fill_value="extrapolate")
+        # Interpolate outcomes based on kk_tr directly without needing to clip kk again
+        f_kk = interp1d(kk_tr, outcome_at_z, kind="cubic", bounds_error=False, fill_value=(outcome_at_z[0], outcome_at_z[-1]))
         outcome_at_kk = f_kk(kk)
         return outcome_at_kk
 
@@ -134,4 +134,3 @@ def get_mu(x, z, kk=None):
         outcomes = calculate_for_single_z(z)
 
     return kk, outcomes
-

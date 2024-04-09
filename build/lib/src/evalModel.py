@@ -9,7 +9,8 @@ import os
 
 
 
-path =  '/home/ahmad/CODE/src/muNCC/'
+path =  '~/CODE/src/muNCC/'
+path = os.path.expanduser(path)
 
 PCNum = sio.loadmat(path +'PCNum.mat')['PCNum']
 PCNum = PCNum[0][0]

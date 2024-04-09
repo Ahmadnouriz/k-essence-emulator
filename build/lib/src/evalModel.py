@@ -9,7 +9,7 @@ import os
 
 
 
-path = path =  '/home/ahmad/CLODE/CLODE/muCC/'
+path =  '/home/ahmad/CODE/src/muNCC/'
 
 PCNum = sio.loadmat(path +'PCNum.mat')['PCNum']
 PCNum = PCNum[0][0]
@@ -34,7 +34,6 @@ for i in range (0,PCNum):
     
 PCBasis = sio.loadmat(path + 'PCBasis.mat')['PCBasis']
 PCMean = sio.loadmat(path +'PCMean.mat')['PCMean']
-
 
 
 
@@ -69,7 +68,6 @@ def uq_evalModel(x_input, MyPCEs):
     return eval_model_vec(x_input_mapped, MyPCE=MyPCEs)
 
 
-
 kk_tr = np.loadtxt('wavenumbers.txt')
 
 def get_mu(x, z, kk=None):
@@ -95,7 +93,7 @@ def get_mu(x, z, kk=None):
                           "The wavenumbers you have requested include values higher than the maximum threshold of 9.4 h/Mpc. "
                           "These values will be clipped to the maximum threshold.", Warning)
         # Clip kk values to ensure they are within the bounds of kk_tr
-        # kk = np.clip(kk, np.min(kk_tr), np.max(kk_tr))
+        #kk = np.clip(kk, np.min(kk_tr), np.max(kk_tr))
 
     # Convert x dictionary into an array, removing the third element
     x_array = list(x.values())
@@ -136,5 +134,3 @@ def get_mu(x, z, kk=None):
         outcomes = calculate_for_single_z(z)
 
     return kk, outcomes
-
-

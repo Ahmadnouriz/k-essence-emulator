@@ -1,4 +1,4 @@
-# $k$-Essence Dark Energy Emulator
+# $k$-essence Dark Energy Emulator
 
 ## Introduction
 This is an emulator for `k-evolution` simulations, specifically designed to emulate the clustering effects of dark energy within cosmological models.

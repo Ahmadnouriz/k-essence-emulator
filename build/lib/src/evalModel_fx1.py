@@ -9,7 +9,7 @@ import os
 
 
 
-path =  '~/CODE/src/muNCC/'
+path =  '~/k-emulator/src/mu_fx1/'
 path = os.path.expanduser(path)
 
 PCNum = sio.loadmat(path +'PCNum.mat')['PCNum']

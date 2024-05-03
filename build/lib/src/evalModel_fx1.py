@@ -1,4 +1,3 @@
-# module1.py
 import numpy as np
 import warnings
 from scipy.interpolate import interp1d
@@ -12,13 +11,13 @@ import os
 path =  '~/k-emulator/src/mu_fx1/'
 path = os.path.expanduser(path)
 
-PCNum = sio.loadmat(path +'PCNum.mat')['PCNum']
-PCNum = PCNum[0][0]
+PCNumber = sio.loadmat(path +'PCNumber.mat')['PCNum']
+PCNumber = PCNumber[0][0]
 
 basis_indices = []
 pce_coefficients  = []
 
-for i in range (1,PCNum+1):
+for i in range (1,PCNumber+1):
 
     # Load the MATLAB file containing the basis indices
     mat_cont = sio.loadmat(path + f'Indices_{i}.mat')['Indices']
@@ -30,10 +29,10 @@ for i in range (1,PCNum+1):
 
 MyPCEs = list(zip(pce_coefficients, basis_indices))    
     
-for i in range (0,PCNum):
+for i in range (0,PCNumber):
     pce_coefficients[i], basis_indices[i] = MyPCEs[i] 
     
-PCBasis = sio.loadmat(path + 'PCBasis.mat')['PCBasis']
+V = sio.loadmat(path + 'V.mat')['PCBasis']
 PCMean = sio.loadmat(path +'PCMean.mat')['PCMean']
 
 
@@ -43,7 +42,15 @@ x_max = np.array([0.06, 0.34, 1.00, 0.73, -0.7, -5, 2.5e-9])
 
 
 def map_input(x, x_min, x_max):
+    
+    parameter_names = ["Omega_b", "Omega_cdm", "n_s", "h", "w0_fld", "log_c2", "A_s"]
+    
+    # Check if any parameter is out of range and raise an error with the specific parameter name
+    for i, value in enumerate(x):
+        if value < x_min[i] or value > x_max[i]:
+            raise ValueError(f"The parameter {parameter_names[i]} you passed is outside the range: [{x_min[i]}, {x_max[i]}].")
     return (2 * (x - x_min) / (x_max - x_min)) - 1
+
 
 
 def eval_model_single(x, MyPCE):
@@ -84,7 +91,6 @@ def get_mu(x, z, kk=None):
     if kk is None:
         kk = kk_tr
     else:
-        # Check kk values against kk_tr bounds and warn if necessary
         if any(k < min(kk_tr) for k in kk):
             warnings.warn("The CLODE emulator is designed to emulate the mu function for wavenumbers within the range [0.016 h/Mpc to 9.4 h/Mpc]. "
                           "The wavenumbers you have requested include values lower than the minimum threshold of 0.016 h/Mpc. "
@@ -96,14 +102,14 @@ def get_mu(x, z, kk=None):
         # Clip kk values to ensure they are within the bounds of kk_tr
         #kk = np.clip(kk, np.min(kk_tr), np.max(kk_tr))
 
-    # Convert x dictionary into an array, removing the third element
+    
     x_array = list(x.values())
-    del x_array[2]  # removing the third row
+    del x_array[2]  
 
-    lambda_PCEs = [uq_evalModel(x_array, MyPCEs[i]) for i in range(0, PCNum)]
+    lambda_PCEs = [uq_evalModel(x_array, MyPCEs[i]) for i in range(0, PCNumber)]
     lambda_PCEs = np.array(lambda_PCEs)
 
-    D_projback = lambda_PCEs.T @ PCBasis.T
+    D_projback = lambda_PCEs.T @ V.T
     D_recovered_PCE = PCMean + D_projback
     Emulated = 10 ** (D_recovered_PCE)
 
@@ -128,7 +134,7 @@ def get_mu(x, z, kk=None):
         outcome_at_kk = f_kk(kk)
         return outcome_at_kk
 
-    # Handle if z is a list or a single value
+    
     if isinstance(z, list):
         outcomes = [calculate_for_single_z(z_val) for z_val in z]
     else:
